@@ -1,13 +1,21 @@
 import './App.css';
 import { Orders } from './Orders/Orders';
-import SmartForm from './Orders/EditOrder';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+    },
+});
 function App() {
     return (
-        <div className="App">
-            <Orders></Orders>
-            <SmartForm/>
-        </div>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+            <div className="App">
+                <Orders></Orders>
+            </div>
+        </ThemeProvider>
     );
 }
 
