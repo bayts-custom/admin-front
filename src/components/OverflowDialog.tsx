@@ -4,6 +4,8 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import { TransitionProps } from '@mui/material/transitions';
+import { Slide } from '@mui/material';
 
 type OverflowDialogProps = {
     children: React.JSX.Element;
@@ -14,6 +16,15 @@ type OverflowDialogProps = {
     onCancel?: () => void;
     isOpen?: boolean;
 };
+
+const Transition = React.forwardRef(function Transition(
+    props: TransitionProps & {
+        children: React.ReactElement<unknown>;
+    },
+    ref: React.Ref<unknown>,
+) {
+    return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export const OverflowDialog = ({
     children,
@@ -47,20 +58,34 @@ export const OverflowDialog = ({
 
     return (
         <React.Fragment>
-            {(!!triggerComponent || !!triggerLabel) && (
-                <Button variant="text" color='inherit' onClick={handleClickOpen}>
-                    {triggerComponent ? triggerComponent() : triggerLabel}
+            {!!triggerLabel && (
+                <Button variant="text" color="inherit" onClick={handleClickOpen}>
+                    {triggerLabel}
                 </Button>
             )}
+            {!!triggerComponent && <div onClick={handleClickOpen}>{triggerComponent()}</div>}
             <Dialog
                 open={open}
                 onClose={handleCancel}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
+                fullScreen
+                color="primary"
+                sx={{
+                    '& .MuiPaper-root, & .MuiDialog-paper, & .MuiPaper-root.MuiDialog-paper': {
+                        backgroundImage: 'none',
+                    },
+                }}
+                slots={{
+                    transition: Transition,
+                }}
             >
                 <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
                 <DialogContent>{children}</DialogContent>
-                <DialogActions>
+                <DialogActions
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                    }}
+                >
                     {!!onCancel && <Button onClick={handleCancel}>Отмена</Button>}
                     {!!onConfirm && (
                         <Button onClick={handleConfirm} autoFocus>

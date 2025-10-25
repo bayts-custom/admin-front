@@ -1,53 +1,89 @@
-import { Boss } from './bosses.api';
+import { PlaceEntity } from './places.api';
 import { CarMarkEntity, CarModelEntity } from './cars.api';
+import { FilmEntity } from './films.api';
 import { instance } from './instance';
 
-const url = 'orders';
+export enum WorkType {
+    FULL = 'full',
+    FRONT = 'front',
+    DETAILS = 'details',
+}
+
+export enum Details {
+    DOORS = 'doors',
+    HOOD = 'hood', // kapot
+    ROOF = 'roof',
+    BUMPER = 'bumper',
+    WING = 'wing', // krilo
+    PILLAR = 'pillar', // stoyka
+    ROOF_STRIP = 'roof strip', // polosa na krishy
+    MIRROR = 'mirror',
+    HEADLIGHT = 'headlight', // fari
+}
 
 export type OrderEntity = {
     id: string;
     createdAt: Date;
     updatedAt: Date;
-    carMark: CarMarkEntity;
-    carModel: CarModelEntity;
     description?: string;
     fullPrice?: number;
-    earn?: number;
+    filmPrice?: number;
+    placePrice?: number;
     expenses?: number;
+    film?: FilmEntity;
+    workType?: WorkType;
+    details?: Details[];
+    filmLength?: number;
+    complicity?: number;
+    review?: boolean;
     dateFrom?: Date;
     dateTo?: Date;
-    boss?: Boss;
+    boss?: PlaceEntity;
+    carMark: CarMarkEntity;
+    carModel: CarModelEntity;
 };
 
 export type SaveOrder = {
     id?: string;
     carMarkId: string;
     carModelId: string;
+    filmId?: string;
     description?: string;
     fullPrice?: number;
-    earn?: number;
+    filmPrice?: number;
+    placePrice?: number;
     expenses?: number;
+    workType?: WorkType;
+    details?: Details[];
+    filmLength?: number;
+    complicity?: number;
+    review?: boolean;
     dateFrom?: string;
     dateTo?: string;
     bossId?: string;
     bossName?: string;
 };
 
-export const getListOrders = async (): Promise<OrderEntity[]> => {
-    const orders = await instance.get(url);
+class OrdersApi {
+    private url = 'orders';
 
-    return orders.data;
-};
+    public async getList() {
+        const orders = await instance.get(this.url);
 
-export const getOrder = async (id: string): Promise<OrderEntity> => {
-    const order = await instance.get(`${url}/${id}`);
+        return orders.data;
+    }
 
-    return order.data;
-};
+    public async get(id: string) {
+        const order = await instance.get(`${this.url}/${id}`);
 
-export const saveOrder = async (data: SaveOrder): Promise<OrderEntity> => {
-    console.log(data)
-    const order = await instance.post(`${url}`, data);
+        return order.data;
+    }
 
-    return order.data;
-};
+    public async save(data: SaveOrder) {
+        const order = await instance.post(`${this.url}`, data);
+
+        return order.data;
+    }
+}
+
+export const ordersApi = new OrdersApi();

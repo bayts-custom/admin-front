@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
-import { Box, TextField, Autocomplete, Stack } from '@mui/material';
+import { Stack, Rating } from '@mui/material';
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { useForm, Controller } from 'react-hook-form';
 import dayjs, { Dayjs } from 'dayjs';
-import { getBossesList } from '../../api/bosses.api';
+import { PlaceEntity } from '../../api/places.api';
 import { OverflowDialog } from '../../components/OverflowDialog';
-import { dateToIsoStringUtc } from '../../helpers/date-to-iso-string-utc';
-import { OrderEntity, saveOrder } from '../../api/orders.api';
+import { Details, OrderEntity, ordersApi, WorkType } from '../../api/orders.api';
 import AddIcon from '@mui/icons-material/Add';
 import { CarSelector } from './CarSelector';
+import { ControllerText } from './components/ControllerText';
+import { ControllerNumber } from './components/ControllerNumber';
+import { ControllerFilmSelect } from './components/ControllerFilmSelect';
+import { ControllerSwitchReview } from './components/ControllerSwitch';
+import { Translate, translate } from '../../translate';
+import { GridLabel } from './components/GridLabel';
+import { ControllerPlaceSelect } from './components/ControllerPlaceSelect';
+import { dateToIsoStringUtc } from '../../helpers/date-to-iso-string-utc';
 
 export type FormValues = {
     id?: string;
@@ -19,20 +25,30 @@ export type FormValues = {
     carModelId: string;
     description: string;
     fullPrice: number;
-    earn: number;
+    filmPrice: number;
+    placePrice: number;
     expenses: number;
-    boss: string;
+    filmId: string;
+    bossId: string;
+    workType?: WorkType;
+    details?: Details[];
+    filmLength?: number;
+    complicity?: number;
+    review?: boolean;
     dateRange: Dayjs[];
 };
 
 type EditOrderProps = {
-    onUpdate: () => void;
+    onUpdate?: () => void;
     data?: OrderEntity;
     children?: React.JSX.Element;
+    bosses: PlaceEntity[];
 };
 
+const FILMS = ['KVM', 'Spectroll', '3M', 'Avery Dennison', 'Hexis', 'KPMF', 'Oracal', 'SunTek', 'XPEL'];
+
 export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
-    const [bosses, setBosses] = useState<string[]>([]);
+    const t = translate.order as Translate;
 
     const {
         control,
@@ -48,44 +64,59 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
                   carModelId: data.carModel.id,
                   description: data.description,
                   fullPrice: data.fullPrice,
-                  earn: data.earn,
+                  filmPrice: data.filmPrice,
+                  placePrice: data.placePrice,
                   expenses: data.expenses,
-                  boss: data.boss?.name ?? '',
+                  filmId: data.film?.id,
+                  bossId: data.boss?.name ?? '',
                   dateRange: [dayjs(data.dateFrom), dayjs(data.dateTo)],
+                  workType: data.workType,
+                  details: data.details,
+                  filmLength: data.filmLength,
+                  complicity: data.complicity,
+                  review: data.review,
               }
             : {
                   carMarkId: '',
                   carModelId: '',
                   description: '',
-                  fullPrice: 0,
-                  earn: 0,
-                  expenses: 0,
-                  boss: '',
-                  dateRange: [dayjs(), dayjs().add(1, 'day')],
+                  fullPrice: undefined,
+                  filmPrice: undefined,
+                  placePrice: undefined,
+                  expenses: undefined,
+                  filmId: undefined,
+                  bossId: '',
+                  dateRange: [dayjs(), dayjs().add(5, 'day')],
+                  workType: undefined,
+                  details: [],
+                  filmLength: undefined,
+                  complicity: 3,
+                  review: undefined,
               },
     });
 
-    useEffect(() => {
-        const getBosses = async () => {
-            const arr = await getBossesList();
-            console.log(arr);
-            setBosses(arr.map(({ name }: { name: string }) => name));
-        };
-        getBosses();
-    }, []);
-
     const handleConfirm = async (data: FormValues) => {
-        await saveOrder({
+        if (!data.carMarkId || !data.carModelId) {
+            return;
+        }
+        await ordersApi.save({
             id: data.id ?? undefined,
             carMarkId: data.carMarkId,
             carModelId: data.carModelId,
             description: data.description,
             fullPrice: data.fullPrice ? Number(data.fullPrice) : undefined,
-            earn: data.earn ? Number(data.earn) : undefined,
+            filmPrice: data.filmPrice ? Number(data.filmPrice) : undefined,
+            placePrice: data.placePrice ? Number(data.placePrice) : undefined,
             expenses: data.expenses ? Number(data.expenses) : undefined,
+            filmId: data.filmId,
             dateFrom: data.dateRange[0] ? dateToIsoStringUtc(data.dateRange[0]) : undefined,
             dateTo: data.dateRange[1] ? dateToIsoStringUtc(data.dateRange[1]) : undefined,
-            bossName: data.boss,
+            bossId: data.bossId,
+            workType: data.workType,
+            details: data.details,
+            filmLength: data.filmLength ? Number(data.filmLength) : undefined,
+            complicity: data.complicity,
+            review: data.review,
         });
         onUpdate?.();
         reset();
@@ -96,68 +127,50 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
         setValue('carModelId', modelId);
     };
 
+    const handleCancel = () => {
+        reset();
+    };
+
     return (
-        <OverflowDialog onConfirm={handleSubmit(handleConfirm)} triggerComponent={() => children ?? <AddIcon />}>
+        <OverflowDialog
+            onConfirm={handleSubmit(handleConfirm)}
+            onCancel={handleCancel}
+            triggerComponent={() => children ?? <AddIcon />}
+        >
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Box sx={{ p: 2, maxWidth: 500 }}>
-                    <form>
-                        <Stack spacing={2}>
-                            <CarSelector onChange={handleChangeCar} control={control} order={data} />
-                            <Controller
-                                name="description"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        label="Описание"
-                                        error={!!errors.description}
-                                        helperText={errors.description?.message}
-                                    />
-                                )}
-                            />
+                <form>
+                    <Stack spacing={2}>
+                        <CarSelector onChange={handleChangeCar} control={control} order={data} />
 
-                            <Controller
-                                name="fullPrice"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        type="number"
-                                        label="Полная цена"
-                                        error={!!errors.fullPrice}
-                                        helperText={errors.fullPrice?.message}
-                                    />
-                                )}
-                            />
+                        <Controller
+                            name="dateRange"
+                            control={control}
+                            render={({ field }) => (
+                                <DateRangePicker
+                                    calendars={1}
+                                    slotProps={{
+                                        textField: {
+                                            size: 'small',
+                                        },
+                                    }}
+                                    value={[field.value[0], field.value[1]]}
+                                    onChange={field.onChange}
+                                    localeText={{ start: 'С', end: 'По' }}
+                                />
+                            )}
+                        />
+                        {errors.dateRange && (
+                            <div style={{ color: 'red', fontSize: '0.875rem' }}>{errors.dateRange.message}</div>
+                        )}
 
-                            <Controller
-                                name="earn"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        type="number"
-                                        label="Цена на руки"
-                                        error={!!errors.earn}
-                                        helperText={errors.earn?.message}
-                                    />
-                                )}
-                            />
+                        <ControllerNumber name="fullPrice" label="Общая стоимость" control={control} errors={errors} />
+                        <ControllerNumber name="filmPrice" label="Цена плёнки" control={control} errors={errors} />
+                        <ControllerNumber name="placePrice" label="За клиента" control={control} errors={errors} />
+                        <ControllerNumber name="expenses" label="Доп расходы" control={control} errors={errors} />
 
-                            <Controller
-                                name="expenses"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        type="number"
-                                        label="Расходы"
-                                        error={!!errors.expenses}
-                                        helperText={errors.expenses?.message}
-                                    />
-                                )}
-                            />
+                        <ControllerText name="description" label="Комментарий" control={control} errors={errors} />
 
+                        {/* <GridLabel label="Место" size={10}>
                             <Controller
                                 name="boss"
                                 control={control}
@@ -165,17 +178,19 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
                                     <Autocomplete
                                         freeSolo
                                         options={bosses}
+                                        getOptionLabel={(option) => {
+                                            if (typeof option === 'string') {
+                                                return option;
+                                            }
+                                            return option.name;
+                                        }}
                                         value={field.value}
                                         onChange={(_, value) => {
-                                            if (typeof value === 'string') {
-                                                setBosses((prev) => [...prev, value]);
-                                            }
                                             field.onChange(value);
                                         }}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
-                                                label="У кого"
                                                 error={!!errors.boss}
                                                 helperText={errors.boss?.message}
                                             />
@@ -183,25 +198,37 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
                                     />
                                 )}
                             />
+                        </GridLabel> */}
 
+                        <ControllerPlaceSelect name="bossId" label="Место" control={control} errors={errors} />
+                        <ControllerFilmSelect name="filmId" label="Плёнка" control={control} errors={errors} />
+                        <ControllerNumber
+                            name="filmLength"
+                            label="Расход плёнки"
+                            control={control}
+                            errors={errors}
+                            subLabel="m"
+                        />
+
+                        <GridLabel label="Сложность" size={6}>
                             <Controller
-                                name="dateRange"
+                                name="complicity"
                                 control={control}
                                 render={({ field }) => (
-                                    <DateRangePicker
-                                        calendars={1}
-                                        value={[field.value[0], field.value[1]]}
-                                        onChange={field.onChange}
-                                        localeText={{ start: 'С', end: 'По' }}
+                                    <Rating
+                                        {...field}
+                                        value={field.value}
+                                        onChange={(_, newValue) => {
+                                            field.onChange(newValue);
+                                        }}
                                     />
                                 )}
                             />
-                            {errors.dateRange && (
-                                <div style={{ color: 'red', fontSize: '0.875rem' }}>{errors.dateRange.message}</div>
-                            )}
-                        </Stack>
-                    </form>
-                </Box>
+                        </GridLabel>
+
+                        <ControllerSwitchReview name="review" control={control} />
+                    </Stack>
+                </form>
             </LocalizationProvider>
         </OverflowDialog>
     );

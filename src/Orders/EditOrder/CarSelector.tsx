@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box } from '@mui/material';
+import { Autocomplete, TextField, CircularProgress, Box, Grid } from '@mui/material';
 import { CarMarkEntity, CarModelEntity, getListMarks, getListModels } from '../../api/cars.api';
 import { Control, Controller } from 'react-hook-form';
 import { FormValues } from './EditOrder';
 import { OrderEntity } from '../../api/orders.api';
+import { useDebounce } from '../../helpers/use-debaunce';
 
 type CarSelectorType = {
     onChange: (markId: string, modelId: string) => void;
@@ -24,27 +25,30 @@ export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
     const [loadingMarks, setLoadingMarks] = useState(false);
     const [loadingModels, setLoadingModels] = useState(false);
 
+    const debouncedMarkSearch = useDebounce(markSearch);
+    const debouncedModelSearch = useDebounce(modelSearch);
+
     useEffect(() => {
         const getMarks = async () => {
-            const marks = await getListMarks(markSearch, markSearch === '' ? true : undefined);
+            const marks = await getListMarks(debouncedMarkSearch, debouncedMarkSearch === '' ? true : undefined);
             setMarks(marks);
             setLoadingMarks(false);
         };
 
         getMarks();
-    }, [markSearch]);
+    }, [debouncedMarkSearch]);
 
     useEffect(() => {
         if (!selectedMark) return;
         setLoadingModels(true);
         const getModels = async () => {
-            const models = await getListModels(selectedMark.id, modelSearch);
+            const models = await getListModels(selectedMark.id, debouncedModelSearch);
             setModels(models);
             setLoadingModels(false);
         };
 
         getModels();
-    }, [modelSearch, selectedMark]);
+    }, [debouncedModelSearch, selectedMark]);
 
     const handlerChange = (model: CarModelEntity) => {
         if (!selectedMark || !model) return;
@@ -53,77 +57,80 @@ export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" gap={2} maxWidth={400}>
-            <Controller
-                name="carMarkId"
-                control={control}
-                render={({ field }) => (
-                    <Autocomplete
-                        {...field}
-                        options={marks}
-                        getOptionLabel={(option) => option.name}
-                        isOptionEqualToValue={(option, value) => option.id === value?.id}
-                        loading={loadingMarks}
-                        value={selectedMark}
-                        onChange={(e, newVal) => {
-                            setSelectedMark(newVal);
-                            setSelectedModel(null);
-                            setModels([]);
-                        }}
-                        inputValue={markSearch}
-                        onInputChange={(e, newInput) => {
-                            setMarkSearch(newInput);
-                        }}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Марка"
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {loadingMarks ? <CircularProgress size={20} /> : null}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                }}
-                            />
-                        )}
-                    />
-                )}
-            />
-
-            <Autocomplete
-                options={models}
-                getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                loading={loadingModels}
-                value={selectedModel}
-                onChange={(e, newVal) => {
-                    setSelectedModel(newVal);
-                    if (newVal) {
-                        handlerChange(newVal);
-                    }
-                }}
-                inputValue={modelSearch}
-                onInputChange={(e, newInput) => setModelSearch(newInput)}
-                disabled={!selectedMark}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        label="Модель"
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {loadingModels ? <CircularProgress size={20} /> : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
-                        }}
-                    />
-                )}
-            />
-        </Box>
+        <Grid container spacing={1}  columns={4}>
+            <Grid size={2}>
+                <Controller
+                    name="carMarkId"
+                    control={control}
+                    render={({ field }) => (
+                        <Autocomplete
+                            {...field}
+                            options={marks}
+                            getOptionLabel={(option) => option.name}
+                            isOptionEqualToValue={(option, value) => option.id === value?.id}
+                            loading={loadingMarks}
+                            value={selectedMark}
+                            onChange={(e, newVal) => {
+                                setSelectedMark(newVal);
+                                setSelectedModel(null);
+                                setModels([]);
+                            }}
+                            inputValue={markSearch}
+                            onInputChange={(e, newInput) => {
+                                setMarkSearch(newInput);
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    // label="Марка"
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        endAdornment: (
+                                            <>
+                                                {loadingMarks ? <CircularProgress size={20} /> : null}
+                                                {params.InputProps.endAdornment}
+                                            </>
+                                        ),
+                                    }}
+                                />
+                            )}
+                        />
+                    )}
+                />
+            </Grid>
+            <Grid size={2}>
+                <Autocomplete
+                    options={models}
+                    getOptionLabel={(option) => option.name}
+                    isOptionEqualToValue={(option, value) => option.id === value?.id}
+                    loading={loadingModels}
+                    value={selectedModel}
+                    onChange={(e, newVal) => {
+                        setSelectedModel(newVal);
+                        if (newVal) {
+                            handlerChange(newVal);
+                        }
+                    }}
+                    inputValue={modelSearch}
+                    onInputChange={(e, newInput) => setModelSearch(newInput)}
+                    disabled={!selectedMark}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            // label="Модель"
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {loadingModels ? <CircularProgress size={20} /> : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            }}
+                        />
+                    )}
+                />
+            </Grid>
+        </Grid>
     );
 };
