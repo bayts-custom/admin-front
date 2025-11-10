@@ -5,7 +5,7 @@ export type FilmPriceEntity = {
     filmId: string;
     amount: string;
     createdAt: string;
-}
+};
 
 export type FilmEntity = {
     id: string;
@@ -17,7 +17,7 @@ export type SaveFilm = {
     id?: string;
     name?: string;
     currentPrice?: string;
-}
+};
 
 class FilmsApi {
     private url = 'films';

@@ -1,7 +1,5 @@
 import { instance } from './instance';
 
-const url = 'cars';
-
 export type CarMarkEntity = {
     id: string;
     name: string;
@@ -22,28 +20,42 @@ export type CarModelEntity = {
     markId: string;
 };
 
-export const getListMarks = async (search?: string, popular?: boolean): Promise<CarMarkEntity[]> => {
-    const orders = await instance.get(
-        `${url}/marks?search=${search}&popular=${typeof popular === 'boolean' ? popular : ''}`,
-    );
+class CarsApi {
+    private url = 'cars';
 
-    return orders.data;
-};
+    public async getListMarks(search?: string, popular?: boolean) {
+        const items = await instance.get(`${this.url}/marks`, {
+            params: {
+                search,
+                popular: typeof popular === 'boolean' ? popular : '',
+            },
+        });
 
-export const getListModels = async (markId: string, search?: string): Promise<CarModelEntity[]> => {
-    const orders = await instance.get(`${url}/models?markId=${markId}&search=${search}`);
+        return items.data;
+    }
 
-    return orders.data;
-};
+    public async getListModels(markId: string, search?: string) {
+        const order = await instance.get(`${this.url}/models`, {
+            params: {
+                markId,
+                search,
+            },
+        });
 
-export const getMark = async (id: string): Promise<CarMarkEntity> => {
-    const order = await instance.get(`${url}/marks/${id}`);
+        return order.data;
+    }
 
-    return order.data;
-};
+    public async getMark(id: string) {
+        const items = await instance.get(`${this.url}/marks/${id}`);
 
-export const getModel = async (id: string): Promise<CarModelEntity> => {
-    const order = await instance.get(`${url}/models/${id}`);
+        return items.data;
+    }
 
-    return order.data;
-};
+    public async getModel(id: string) {
+        const order = await instance.post(`${this.url}/models/${id}`);
+
+        return order.data;
+    }
+}
+
+export const carsApi = new CarsApi();

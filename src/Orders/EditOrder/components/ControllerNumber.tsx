@@ -23,6 +23,7 @@ export const ControllerNumber = ({ control, name, label, errors, subLabel = 'k' 
                         <TextField
                             {...field}
                             type="number"
+                            inputProps={{ enterKeyHint: 'next' }}
                             error={!!errors[name]}
                             helperText={errors[name]?.message as string}
                             InputProps={{

@@ -1,23 +1,24 @@
-import { Stack, Rating } from '@mui/material';
-import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { Stack, Rating, Grid } from '@mui/material';
 
 import { useForm, Controller } from 'react-hook-form';
 import dayjs, { Dayjs } from 'dayjs';
 import { PlaceEntity } from '../../api/places.api';
 import { OverflowDialog } from '../../components/OverflowDialog';
-import { Details, OrderEntity, ordersApi, WorkType } from '../../api/orders.api';
+import { Details, OrderEntity, ordersApi, OrderStatus, WorkType } from '../../api/orders.api';
 import AddIcon from '@mui/icons-material/Add';
-import { CarSelector } from './CarSelector';
+import { ControllerCar } from './components/ControllerCar';
 import { ControllerText } from './components/ControllerText';
 import { ControllerNumber } from './components/ControllerNumber';
 import { ControllerFilmSelect } from './components/ControllerFilmSelect';
 import { ControllerSwitchReview } from './components/ControllerSwitch';
-import { Translate, translate } from '../../translate';
+// import { Translate, translate } from '../../translate';
 import { GridLabel } from './components/GridLabel';
 import { ControllerPlaceSelect } from './components/ControllerPlaceSelect';
-import { dateToIsoStringUtc } from '../../helpers/date-to-iso-string-utc';
+import { ControllerStatus } from './components/ControllerStatus';
+import { ControllerDateRange } from './components/ControllerDateRange';
+import { fromDayjsToString } from '../../helpers/show-date-period.helper';
+import { ControllerColor } from './components/ControllerColor';
+import { ControllerWorkType } from './components/ControllerWorkType';
 
 export type FormValues = {
     id?: string;
@@ -36,6 +37,8 @@ export type FormValues = {
     complicity?: number;
     review?: boolean;
     dateRange: Dayjs[];
+    color?: string;
+    status: OrderStatus;
 };
 
 type EditOrderProps = {
@@ -45,10 +48,8 @@ type EditOrderProps = {
     bosses: PlaceEntity[];
 };
 
-const FILMS = ['KVM', 'Spectroll', '3M', 'Avery Dennison', 'Hexis', 'KPMF', 'Oracal', 'SunTek', 'XPEL'];
-
 export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
-    const t = translate.order as Translate;
+    // const t = translate.order as Translate;
 
     const {
         control,
@@ -68,13 +69,15 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
                   placePrice: data.placePrice,
                   expenses: data.expenses,
                   filmId: data.film?.id,
-                  bossId: data.boss?.name ?? '',
+                  bossId: data.boss?.id ?? '',
                   dateRange: [dayjs(data.dateFrom), dayjs(data.dateTo)],
                   workType: data.workType,
                   details: data.details,
                   filmLength: data.filmLength,
                   complicity: data.complicity,
                   review: data.review,
+                  color: data.color,
+                  status: data.status,
               }
             : {
                   carMarkId: '',
@@ -92,31 +95,35 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
                   filmLength: undefined,
                   complicity: 3,
                   review: undefined,
+                  color: undefined,
+                  status: OrderStatus.NEW,
               },
     });
 
-    const handleConfirm = async (data: FormValues) => {
-        if (!data.carMarkId || !data.carModelId) {
+    const handleConfirm = async (formData: FormValues) => {
+        if (!formData.carMarkId || !formData.carModelId) {
             return;
         }
         await ordersApi.save({
-            id: data.id ?? undefined,
-            carMarkId: data.carMarkId,
-            carModelId: data.carModelId,
-            description: data.description,
-            fullPrice: data.fullPrice ? Number(data.fullPrice) : undefined,
-            filmPrice: data.filmPrice ? Number(data.filmPrice) : undefined,
-            placePrice: data.placePrice ? Number(data.placePrice) : undefined,
-            expenses: data.expenses ? Number(data.expenses) : undefined,
-            filmId: data.filmId,
-            dateFrom: data.dateRange[0] ? dateToIsoStringUtc(data.dateRange[0]) : undefined,
-            dateTo: data.dateRange[1] ? dateToIsoStringUtc(data.dateRange[1]) : undefined,
-            bossId: data.bossId,
-            workType: data.workType,
-            details: data.details,
-            filmLength: data.filmLength ? Number(data.filmLength) : undefined,
-            complicity: data.complicity,
-            review: data.review,
+            id: formData.id ?? undefined,
+            carMarkId: formData.carMarkId,
+            carModelId: formData.carModelId,
+            description: formData.description,
+            color: formData.color,
+            status: formData.status !== data?.status ? formData.status : undefined,
+            fullPrice: formData.fullPrice ? Number(formData.fullPrice) : undefined,
+            filmPrice: formData.filmPrice ? Number(formData.filmPrice) : undefined,
+            placePrice: formData.placePrice ? Number(formData.placePrice) : undefined,
+            expenses: formData.expenses ? Number(formData.expenses) : undefined,
+            filmId: formData.filmId,
+            dateFrom: formData.dateRange[0] ? fromDayjsToString(formData.dateRange[0]) : undefined,
+            dateTo: formData.dateRange[1] ? fromDayjsToString(formData.dateRange[1]) : undefined,
+            bossId: !!formData.bossId ? formData.bossId : undefined,
+            workType: formData.workType,
+            details: formData.details,
+            filmLength: formData.filmLength ? Number(formData.filmLength) : undefined,
+            complicity: formData.complicity,
+            review: formData.review,
         });
         onUpdate?.();
         reset();
@@ -137,99 +144,84 @@ export const EditOrder = ({ onUpdate, data, children }: EditOrderProps) => {
             onCancel={handleCancel}
             triggerComponent={() => children ?? <AddIcon />}
         >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <form>
-                    <Stack spacing={2}>
-                        <CarSelector onChange={handleChangeCar} control={control} order={data} />
+            <form
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        const form = e.currentTarget;
+                        const index = Array.prototype.indexOf.call(form.elements, e.target);
+                        const next = form.elements[index + 1];
 
+                        if (next instanceof HTMLElement) {
+                            e.preventDefault();
+                            next.focus();
+                        }
+                    }
+                }}
+            >
+                <Stack spacing={2}>
+                    <ControllerCar onChange={handleChangeCar} control={control} order={data} />
+
+                    <ControllerDateRange
+                        name="dateRange"
+                        control={control}
+                        errors={errors}
+                        start={data?.dateFrom}
+                        end={data?.dateTo}
+                    />
+
+                    <ControllerPlaceSelect name="bossId" label="Место" control={control} errors={errors} />
+
+                    <ControllerWorkType control={control} errors={errors} />
+
+                    <ControllerNumber name="fullPrice" label="Общая стоимость" control={control} errors={errors} />
+                    <ControllerNumber name="placePrice" label="За клиента" control={control} errors={errors} />
+                    <ControllerNumber name="expenses" label="Доп расходы" control={control} errors={errors} />
+
+                    <ControllerFilmSelect name="filmId" label="Плёнка" control={control} errors={errors} />
+                    <ControllerNumber
+                        name="filmLength"
+                        label="Расход плёнки"
+                        control={control}
+                        errors={errors}
+                        subLabel="m"
+                    />
+                    <ControllerNumber name="filmPrice" label="Цена плёнки" control={control} errors={errors} />
+
+                    <GridLabel label="Сложность" size={6}>
                         <Controller
-                            name="dateRange"
+                            name="complicity"
                             control={control}
                             render={({ field }) => (
-                                <DateRangePicker
-                                    calendars={1}
-                                    slotProps={{
-                                        textField: {
-                                            size: 'small',
-                                        },
+                                <Rating
+                                    {...field}
+                                    value={field.value}
+                                    onChange={(_, newValue) => {
+                                        field.onChange(newValue);
                                     }}
-                                    value={[field.value[0], field.value[1]]}
-                                    onChange={field.onChange}
-                                    localeText={{ start: 'С', end: 'По' }}
                                 />
                             )}
                         />
-                        {errors.dateRange && (
-                            <div style={{ color: 'red', fontSize: '0.875rem' }}>{errors.dateRange.message}</div>
-                        )}
+                    </GridLabel>
 
-                        <ControllerNumber name="fullPrice" label="Общая стоимость" control={control} errors={errors} />
-                        <ControllerNumber name="filmPrice" label="Цена плёнки" control={control} errors={errors} />
-                        <ControllerNumber name="placePrice" label="За клиента" control={control} errors={errors} />
-                        <ControllerNumber name="expenses" label="Доп расходы" control={control} errors={errors} />
+                    <Grid
+                        sx={{
+                            justifyContent: 'space-between',
+                            display: 'flex',
+                        }}
+                    >
+                        <ControllerSwitchReview name="review" control={control} />
 
-                        <ControllerText name="description" label="Комментарий" control={control} errors={errors} />
-
-                        {/* <GridLabel label="Место" size={10}>
-                            <Controller
-                                name="boss"
-                                control={control}
-                                render={({ field }) => (
-                                    <Autocomplete
-                                        freeSolo
-                                        options={bosses}
-                                        getOptionLabel={(option) => {
-                                            if (typeof option === 'string') {
-                                                return option;
-                                            }
-                                            return option.name;
-                                        }}
-                                        value={field.value}
-                                        onChange={(_, value) => {
-                                            field.onChange(value);
-                                        }}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                error={!!errors.boss}
-                                                helperText={errors.boss?.message}
-                                            />
-                                        )}
-                                    />
-                                )}
-                            />
-                        </GridLabel> */}
-
-                        <ControllerPlaceSelect name="bossId" label="Место" control={control} errors={errors} />
-                        <ControllerFilmSelect name="filmId" label="Плёнка" control={control} errors={errors} />
-                        <ControllerNumber
-                            name="filmLength"
-                            label="Расход плёнки"
+                        <ControllerStatus
+                            value={data?.status ?? OrderStatus.NEW}
+                            name="status"
                             control={control}
                             errors={errors}
-                            subLabel="m"
-                        />
-
-                        <GridLabel label="Сложность" size={6}>
-                            <Controller
-                                name="complicity"
-                                control={control}
-                                render={({ field }) => (
-                                    <Rating
-                                        {...field}
-                                        value={field.value}
-                                        onChange={(_, newValue) => {
-                                            field.onChange(newValue);
-                                        }}
-                                    />
-                                )}
-                            />
-                        </GridLabel>
-
-                        <ControllerSwitchReview name="review" control={control} />
-                    </Stack>
-                </form>
-            </LocalizationProvider>
+                        ></ControllerStatus>
+                    </Grid>
+                    <ControllerText name="description" label="Комментарий" control={control} errors={errors} />
+                    <ControllerColor name="color" control={control} errors={errors} />
+                </Stack>
+            </form>
         </OverflowDialog>
     );
 };

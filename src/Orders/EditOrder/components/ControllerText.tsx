@@ -7,9 +7,8 @@ type ControllerTextProps = {
     control: Control<FormValues, any, FormValues>;
     name: keyof FormValues;
     label?: string;
-    errors: FieldErrors<FormValues>
+    errors: FieldErrors<FormValues>;
 };
-
 
 export const ControllerText = ({ control, name, label, errors }: ControllerTextProps) => {
     return (
@@ -20,7 +19,8 @@ export const ControllerText = ({ control, name, label, errors }: ControllerTextP
                 <TextField
                     {...field}
                     label={label}
-                    size='small'
+                    inputProps={{ enterKeyHint: 'next' }}
+                    size="small"
                     multiline
                     rows={3}
                     error={!!errors[name]}

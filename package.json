@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "admin-front",
   "version": "0.1.0",
   "private": true,
   "homepage": "https://bayts-custom.github.io/admin-front",
@@ -21,21 +21,33 @@
     "axios": "^1.11.0",
     "dayjs": "^1.11.13",
     "react": "^19.1.0",
+    "react-colorful": "^5.6.1",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.61.1",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.4",
     "react-scripts": "^5.0.1",
+    "tinycolor2": "^1.6.0",
     "typescript": "^4.9.5",
     "use-local-storage": "^3.0.0",
     "web-vitals": "^2.1.4",
     "zod": "^4.0.9"
   },
+  "devDependencies": {
+    "@types/tinycolor2": "^1.4.6",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "gh-pages": "^6.3.0"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix"
   },
   "eslintConfig": {
     "extends": [
@@ -54,8 +66,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gh-pages": "^6.3.0"
   }
 }

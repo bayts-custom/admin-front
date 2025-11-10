@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Grid } from '@mui/material';
-import { CarMarkEntity, CarModelEntity, getListMarks, getListModels } from '../../api/cars.api';
+import { Autocomplete, TextField, CircularProgress, Grid } from '@mui/material';
+import { CarMarkEntity, CarModelEntity, carsApi } from '../../../api/cars.api';
 import { Control, Controller } from 'react-hook-form';
-import { FormValues } from './EditOrder';
-import { OrderEntity } from '../../api/orders.api';
-import { useDebounce } from '../../helpers/use-debaunce';
+import { FormValues } from '../EditOrder';
+import { OrderEntity } from '../../../api/orders.api';
+import { useDebounce } from '../../../helpers/use-debaunce.helper';
 
-type CarSelectorType = {
+type ControllerCarProps = {
     onChange: (markId: string, modelId: string) => void;
     control: Control<FormValues, any, FormValues>;
     order?: OrderEntity;
 };
 
-export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
+export const ControllerCar = ({ onChange, control, order }: ControllerCarProps) => {
     const [marks, setMarks] = useState<CarMarkEntity[]>([]);
     const [models, setModels] = useState<CarModelEntity[]>([]);
 
@@ -30,7 +30,10 @@ export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
 
     useEffect(() => {
         const getMarks = async () => {
-            const marks = await getListMarks(debouncedMarkSearch, debouncedMarkSearch === '' ? true : undefined);
+            const marks = await carsApi.getListMarks(
+                debouncedMarkSearch,
+                debouncedMarkSearch === '' ? true : undefined,
+            );
             setMarks(marks);
             setLoadingMarks(false);
         };
@@ -42,7 +45,7 @@ export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
         if (!selectedMark) return;
         setLoadingModels(true);
         const getModels = async () => {
-            const models = await getListModels(selectedMark.id, debouncedModelSearch);
+            const models = await carsApi.getListModels(selectedMark.id, debouncedModelSearch);
             setModels(models);
             setLoadingModels(false);
         };
@@ -57,7 +60,7 @@ export const CarSelector = ({ onChange, control, order }: CarSelectorType) => {
     };
 
     return (
-        <Grid container spacing={1}  columns={4}>
+        <Grid container spacing={1} columns={4}>
             <Grid size={2}>
                 <Controller
                     name="carMarkId"
