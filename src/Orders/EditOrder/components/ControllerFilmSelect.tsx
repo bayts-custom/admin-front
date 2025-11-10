@@ -13,7 +13,7 @@ type ControllerFilmSelectProps = {
     errors: FieldErrors<FormValues>;
 };
 
-export const ControllerFilmSelect = ({ control, name, label, errors }: ControllerFilmSelectProps) => {
+export const ControllerFilmSelect = ({ control, name, label }: ControllerFilmSelectProps) => {
     const [films, setFilms] = useState<FilmEntity[]>([]);
     const [loading, setLoading] = useState(true);
 

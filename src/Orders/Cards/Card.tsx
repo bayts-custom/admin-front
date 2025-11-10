@@ -6,9 +6,9 @@ import { Card as CardM, CardContent, Typography, Grid, Box } from '@mui/material
 import { OrderEntity } from '../../api/orders.api';
 import { Translate, translate } from '../../translate';
 import { EditOrder } from '../EditOrder/EditOrder';
-import { showPrice } from '../../helpers/show-price';
+import { showPrice } from '../../helpers/show-price.helper';
 import { PlaceEntity } from '../../api/places.api';
-import { showDatePeriod } from '../../helpers/show-date-period';
+import { showDatePeriod } from '../../helpers/show-date-period.helper';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
@@ -19,7 +19,6 @@ type CardProps = {
     color: string;
     textColor: string;
 };
-
 
 function DataRow({ label, value }: { label: string | React.JSX.Element; value?: string }) {
     return (
@@ -38,47 +37,47 @@ export const Card = ({ data, onUpdate, bosses, color, textColor }: CardProps) =>
     const workType = translate.workType as Translate;
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <CardM
-                sx={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '100%',
-                    height: '100%',
-                    borderLeft: `2px solid ${color}`,
-                    boxShadow: 'inset 5px 0 0 0 #333',
-                    color: textColor
-                }}
-                onClick={onUpdate}
-            >
-                <CardContent>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: 22,
-                        }}
-                    >
-                        <div>
-                            {data.carMark.name} {data.carModel.name}
-                        </div>
-                        <EditOrder bosses={bosses} data={data} onUpdate={onUpdate}>
+            <EditOrder bosses={bosses} data={data} onUpdate={onUpdate}>
+                <CardM
+                    sx={{
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        width: '100%',
+                        height: '100%',
+                        borderLeft: `2px solid ${color}`,
+                        boxShadow: 'inset 5px 0 0 0 #333',
+                        color: textColor,
+                    }}
+                    onClick={onUpdate}
+                >
+                    <CardContent>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                fontSize: 22,
+                            }}
+                        >
+                            <div>
+                                {data.carMark.name} {data.carModel.name}
+                            </div>
                             <VisibilityIcon />
-                        </EditOrder>
-                    </Box>
-                    {data.film?.name} {data.workType ? workType[data.workType] : ''}
-                    <Typography variant="body2">
-                        <Grid container columns={16}>
-                            <DataRow label={t.description} value={data.description} />
-                            <DataRow label={t.boss} value={data.boss?.name} />
-                            <DataRow label={t.fullPrice} value={showPrice(data.fullPrice)} />
-                            <DataRow
-                                label={<CalendarMonthIcon fontSize="small" />}
-                                value={showDatePeriod(data.dateFrom, data.dateTo)}
-                            />
-                        </Grid>
-                    </Typography>
-                </CardContent>
-            </CardM>
+                        </Box>
+                        {data.film?.name} {data.workType ? workType[data.workType] : ''}
+                        <Typography variant="body2">
+                            <Grid container columns={16}>
+                                <DataRow label={t.description} value={data.description} />
+                                <DataRow label={t.boss} value={data.boss?.name} />
+                                <DataRow label={t.fullPrice} value={showPrice(data.fullPrice)} />
+                                <DataRow
+                                    label={<CalendarMonthIcon fontSize="small" />}
+                                    value={showDatePeriod(data.dateFrom, data.dateTo)}
+                                />
+                            </Grid>
+                        </Typography>
+                    </CardContent>
+                </CardM>
+            </EditOrder>
         </LocalizationProvider>
     );
 };

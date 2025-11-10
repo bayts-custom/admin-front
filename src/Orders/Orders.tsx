@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ordersApi, OrderEntity } from '../api/orders.api';
-import { Translate, translate } from '../translate';
+// import { Translate, translate } from '../translate';
 import { Cards } from './Cards/Cards';
 import { PlaceEntity, placesApi } from '../api/places.api';
 import { Calendar } from './Calendar/Calendar';
@@ -15,7 +15,7 @@ export const Orders = ({ view }: { view: View }) => {
     const [needRefresh, setNeedRefresh] = useState(true);
     const [bosses, setBosses] = useState<PlaceEntity[]>([]);
 
-    const t = translate.order as Translate;
+    // const t = translate.order as Translate;
 
     useEffect(() => {
         const getOrders = async () => {
@@ -41,7 +41,7 @@ export const Orders = ({ view }: { view: View }) => {
     return (
         <>
             {view === View.CARDS && <Cards orders={orders} onUpdate={handleAddOrder} bosses={bosses} />}
-            {view === View.CALENDAR && <Calendar orders={orders} onUpdate={handleAddOrder} bosses={bosses} />}
+            {view === View.CALENDAR && <Calendar allOrders={orders} />}
         </>
     );
 };

@@ -3,4 +3,4 @@ export const showPrice = (price?: number): string => {
         return 'N/A';
     }
     return `${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}k`;
-}
+};

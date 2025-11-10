@@ -13,7 +13,7 @@ type ControllerPlaceSelectProps = {
     errors: FieldErrors<FormValues>;
 };
 
-export const ControllerPlaceSelect = ({ control, name, label, errors }: ControllerPlaceSelectProps) => {
+export const ControllerPlaceSelect = ({ control, name, label }: ControllerPlaceSelectProps) => {
     const [places, setPlaces] = useState<PlaceEntity[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -32,22 +32,24 @@ export const ControllerPlaceSelect = ({ control, name, label, errors }: Controll
             <Controller
                 name={name}
                 control={control}
-                render={({ field }) => (
-                    <Select fullWidth {...field} value={field.value ?? ''}>
-                        {loading ? (
-                            <MenuItem value="">
-                                <CircularProgress size={18} sx={{ mr: 1 }} />
-                                Загрузка...
-                            </MenuItem>
-                        ) : (
-                            places.map((place) => (
-                                <MenuItem key={place.id} value={place.id}>
-                                    {place.name}
+                render={({ field }) => {
+                    return (
+                        <Select fullWidth {...field} value={field.value ?? ''}>
+                            {loading ? (
+                                <MenuItem value="">
+                                    <CircularProgress size={18} sx={{ mr: 1 }} />
+                                    Загрузка...
                                 </MenuItem>
-                            ))
-                        )}
-                    </Select>
-                )}
+                            ) : (
+                                places.map((place) => (
+                                    <MenuItem key={place.id} value={place.id}>
+                                        {place.name}
+                                    </MenuItem>
+                                ))
+                            )}
+                        </Select>
+                    );
+                }}
             />
         </GridLabel>
     );

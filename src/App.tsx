@@ -9,6 +9,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PersonIcon from '@mui/icons-material/Person';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
+import 'dayjs/locale/ru';
 
 const darkTheme = createTheme({
     palette: {
@@ -43,10 +44,10 @@ function App() {
 
     return (
         <ThemeProvider theme={darkTheme}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
                 <CssBaseline />
 
-                <Box sx={{ height: 'calc(100% - 72px)', marginBottom: '72px', overflow: 'scroll' }}>
+                <Box sx={{ height: 'calc(100% - 72px)', marginBottom: '72px' }}>
                     {[TabType.CALENDAR, TabType.CARDS].includes(tab) && (
                         <Orders view={tab === TabType.CALENDAR ? View.CALENDAR : View.CARDS} />
                     )}

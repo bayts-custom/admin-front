@@ -3,7 +3,7 @@ import { instance } from './instance';
 export type PlaceEntity = {
     id: string;
     name: string;
-}
+};
 
 class PlacesApi {
     private url = 'bosses';

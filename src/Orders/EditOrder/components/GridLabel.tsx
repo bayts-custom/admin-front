@@ -10,9 +10,7 @@ export const GridLabel = ({ children, label, size = 5 }: GridLabelProps) => {
     return (
         <Grid container spacing={2} columns={16} alignItems="center">
             <Grid size={16 - size}>{label}:</Grid>
-            <Grid size={size}>
-                {children}
-            </Grid>
+            <Grid size={size}>{children}</Grid>
         </Grid>
     );
 };

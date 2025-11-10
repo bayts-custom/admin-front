@@ -29,20 +29,12 @@ export const ControllerSwitchReview = ({ control, name }: ControllerSwitchReview
                         <FormGroup row>
                             <FormControlLabel
                                 control={
-                                    <Switch
-                                        checked={value === false}
-                                        onChange={() => handleChange(Review.SKAM)}
-                                    />
+                                    <Switch checked={value === false} onChange={() => handleChange(Review.SKAM)} />
                                 }
                                 label={Review.SKAM}
                             />
                             <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={value === true}
-                                        onChange={() => handleChange(Review.NORM)}
-                                    />
-                                }
+                                control={<Switch checked={value === true} onChange={() => handleChange(Review.NORM)} />}
                                 label={Review.NORM}
                             />
                         </FormGroup>
